@@ -63,7 +63,7 @@ function fallbackCopy(text, btnElement) {
 function showCopiedFeedback(btnElement) {
   if (!btnElement) return;
   const originalText = btnElement.innerHTML;
-  btnElement.innerHTML = '✓ Copied!';
+  btnElement.textContent = 'Copied';
   btnElement.style.color = 'var(--green)';
   setTimeout(() => {
     btnElement.innerHTML = originalText;
@@ -330,13 +330,43 @@ function initSSRFLab() {
   const btn = document.getElementById('ssrf-validate-btn');
   const output = document.getElementById('ssrf-output');
 
-  const blockedPrefixes = [
-    "127.", "10.", "192.168.", "172.16.", "172.17.",
-    "172.18.", "172.19.", "172.20.", "169.254.",
-    "::1", "fc00:", "fd"
-  ];
+  // Returns a reason string when the host is loopback, private, link-local or unspecified, else null.
+  // The URL parser has already normalised hex, octal and integer IPv4 forms (0x7f000001 -> 127.0.0.1).
+  function privateAddressReason(host) {
+    const h = host.replace(/^\[|\]$/g, '');
+    if (h === 'localhost' || h.endsWith('.localhost')) return 'loopback name';
+    const v4 = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (v4) {
+      const a = Number(v4[1]), b = Number(v4[2]);
+      if (a === 127) return 'loopback (127.0.0.0/8)';
+      if (a === 10) return 'private (10.0.0.0/8)';
+      if (a === 172 && b >= 16 && b <= 31) return 'private (172.16.0.0/12)';
+      if (a === 192 && b === 168) return 'private (192.168.0.0/16)';
+      if (a === 169 && b === 254) return 'link-local (169.254.0.0/16)';
+      if (a === 100 && b >= 64 && b <= 127) return 'carrier-grade NAT (100.64.0.0/10)';
+      if (a === 0) return 'unspecified (0.0.0.0/8)';
+      return null;
+    }
+    if (h.includes(':')) {
+      if (h === '::1') return 'IPv6 loopback';
+      if (h === '::') return 'IPv6 unspecified';
+      if (/^f[cd][0-9a-f]{0,2}:/.test(h)) return 'IPv6 unique local (fc00::/7)';
+      if (/^fe[89ab][0-9a-f]?:/.test(h)) return 'IPv6 link-local (fe80::/10)';
+      const mapped = h.match(/^::ffff:(.+)$/);
+      if (mapped) {
+        const m = mapped[1];
+        if (m.includes('.')) return privateAddressReason(m);
+        const parts = m.split(':');
+        if (parts.length === 2) {
+          const hi = parseInt(parts[0], 16), lo = parseInt(parts[1], 16);
+          return privateAddressReason([hi >> 8, hi & 255, lo >> 8, lo & 255].join('.'));
+        }
+      }
+    }
+    return null;
+  }
   const blockedSchemes = ["file", "gopher", "dict", "ftp", "jar", "netdoc"];
-  const blockedHosts = ["metadata.google.internal", "instance-data"];
+  const blockedHosts = ["metadata.google.internal", "metadata", "instance-data", "169.254.169.254", "[fd00:ec2::254]"];
 
   const dangerousPorts = {
     "21": "FTP",
@@ -425,16 +455,10 @@ function initSSRFLab() {
     }
 
     // 3. Subnet checks (resolving local subnets)
-    let blockedPrefixFound = null;
-    for (const prefix of blockedPrefixes) {
-      if (host.startsWith(prefix)) {
-        blockedPrefixFound = prefix;
-        break;
-      }
-    }
+    const blockedPrefixFound = privateAddressReason(host);
 
     if (blockedPrefixFound) {
-      output.innerHTML = `<div class="console-alert critical">✗ BLOCK: RFC 1918 Private IP Address range detected: "${host}"</div>\n` +
+      output.innerHTML = `<div class="console-alert critical">✗ BLOCK: Internal address, ${blockedPrefixFound}: "${escapeHtml(host)}"</div>\n` +
         `<strong>Reason:</strong> Localhost loopback and private subnets cannot be queried. Prevents attackers scanning internal networks from outside.\n\n` +
         `<span class="tag critical">Attack vector: Local Host Discovery</span>`;
       updateConsoleLed(output, 'alert');
