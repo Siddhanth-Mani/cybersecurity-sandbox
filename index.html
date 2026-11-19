@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Cybersecurity Study Guide &amp; Interactive Sandbox</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="grid-bg"></div>
+  <div class="hero-eyebrow">Cybersecurity Testing Concepts</div>
+  <h1>Web Application<br><span>Security Sandbox &amp; Guide</span></h1>
+  <p class="hero-sub">A comprehensive interactive reference covering attack surfaces, vulnerability classes, and real-time client-side security validators.</p>
+  <div class="badge-row">
+    <a href="#recon" class="badge">Reconnaissance</a>
+    <a href="#ssrf" class="badge">SSRF</a>
+    <a href="#auth" class="badge">Auth &amp; Authz</a>
+    <a href="#injection" class="badge">Injection</a>
+    <a href="#smuggling" class="badge">Smuggling</a>
+    <a href="#waf" class="badge">WAF</a>
+  </div>
+</section>
+
+<div class="container">
+
+  <!-- ATTACK PATH NAVIGATOR -->
+  <nav class="attack-navigator">
+    <a href="#recon" class="nav-step active">
+      <span class="step-number">01</span>
+      <span>Reconnaissance</span>
+    </a>
+    <div class="nav-connector"></div>
+    <a href="#ssrf" class="nav-step">
+      <span class="step-number">02</span>
+      <span>SSRF Security</span>
+    </a>
+    <div class="nav-connector"></div>
+    <a href="#auth" class="nav-step">
+      <span class="step-number">03</span>
+      <span>Authentication</span>
+    </a>
+    <div class="nav-connector"></div>
+    <a href="#injection" class="nav-step">
+      <span class="step-number">04</span>
+      <span>Injections</span>
+    </a>
+    <div class="nav-connector"></div>
+    <a href="#smuggling" class="nav-step">
+      <span class="step-number">05</span>
+      <span>Smuggling</span>
+    </a>
+    <div class="nav-connector"></div>
+    <a href="#waf" class="nav-step">
+      <span class="step-number">06</span>
+      <span>WAF Bypass</span>
+    </a>
+  </nav>
+
+  <!-- RECON -->
+  <section class="section" id="recon">
+    <div class="section-num">01 / 06</div>
+    <div class="section-header-row">
+      <h2 class="section-title">Reconnaissance &amp; <span class="accent">Information Gathering</span></h2>
+      <div class="section-tabs">
+        <button class="tab-btn active" data-target="recon-ref-panel">📚 Reference</button>
+        <button class="tab-btn tab-lab" data-target="recon-lab-panel">🔬 Interactive Lab</button>
+      </div>
+    </div>
+    <p class="section-intro">The first phase of any security assessment. Professionals map out systems, services, domains, and technologies to understand the attack surface before active testing begins.</p>
+
+    <!-- Reference Content -->
+    <div class="tab-content active" id="recon-ref-panel">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">🌐</div>
+          <div class="card-title">Passive Recon</div>
+          <div class="card-body">Gathering information without directly interacting with the target. Uses OSINT, WHOIS, DNS records, certificate transparency logs, and public repositories.</div>
+        </div>
+        <div class="card green">
+          <div class="card-icon">🔍</div>
+          <div class="card-title">Active Recon</div>
+          <div class="card-body">Direct interaction with target systems via port scanning, service fingerprinting, web crawling, and directory enumeration. Leaves traces in server logs.</div>
+        </div>
+        <div class="card purple">
+          <div class="card-icon">🗺️</div>
+          <div class="card-title">Attack Surface Mapping</div>
+          <div class="card-body">Identifying all entry points: exposed ports, APIs, subdomains, third-party integrations, and open S3 buckets or cloud storage.</div>
+        </div>
+      </div>
+
+      <div class="terminal-window">
+        <div class="terminal-header">
+          <div class="terminal-buttons">
+            <div class="terminal-btn close"></div>
+            <div class="terminal-btn minimize"></div>
+            <div class="terminal-btn maximize"></div>
+          </div>
+          <div class="terminal-title">Common Recon Commands</div>
+          <div class="terminal-led"></div>
+          <div class="terminal-actions">
+            <button class="copy-action-btn" data-copy-target="recon-ref-commands">Copy Code</button>
+          </div>
+        </div>
+        <div id="recon-ref-commands" class="terminal-body">
+          <span class="comment"># Full port scan with service detection and defaults</span><br>
+          <span class="cmd">nmap</span> -sV -sC -p- target.com<br><br>
+          <span class="comment"># Subdomain enumeration + probing live status</span><br>
+          <span class="cmd">subfinder</span> -d target.com | <span class="cmd">httpx</span><br><br>
+          <span class="comment"># Certificate Transparency Log subdomain enumeration</span><br>
+          <span class="cmd">curl</span> -s <span class="str">"https://crt.sh/?q=%.target.com&output=json"</span> | <span class="cmd">jq</span> .[].name_value<br><br>
+          <span class="comment"># Query DNS records in short format</span><br>
+          <span class="cmd">dig</span> +short ANY target.com
+        </div>
+      </div>
+    </div>
+
+    <!-- Lab Content -->
+    <div class="tab-content" id="recon-lab-panel">
+      <div class="lab-container">
+        <div class="lab-panel">
+          <div class="lab-panel-header">Header Analysis Input <span>Paste Raw HTTP response</span></div>
+          <div class="lab-field">
+            <label for="recon-headers-input">
+              Paste Raw HTTP Headers:
+              <span class="label-hint">Paste key-value sets</span>
+            </label>
+            <textarea id="recon-headers-input" class="cyber-textarea" placeholder="HTTP/1.1 200 OK&#10;Server: Apache/2.4.51 (Ubuntu)&#10;X-Powered-By: PHP/8.1.2&#10;X-Frame-Options: SAMEORIGIN"></textarea>
+          </div>
+          <div class="template-row">
+            <span style="font-family: var(--mono); font-size: 10px; color: var(--muted); align-self: center; margin-right: 4px;">Presets:</span>
+            <button class="template-btn" data-type="recon" data-key="apache" data-input-target="recon-headers-input">Apache PHP</button>
+            <button class="template-btn" data-type="recon" data-key="nginx" data-input-target="recon-headers-input">Secure Nginx</button>
+            <button class="template-btn" data-type="recon" data-key="aws" data-input-target="recon-headers-input">AWS ALB</button>
+          </div>
+          <button id="recon-analyze-btn" class="cyber-btn">Analyze Headers</button>
+        </div>
+        <div class="lab-panel">
+          <div class="lab-panel-header">Scan Output Console <span>Output Report</span></div>
+          <div class="terminal-window">
+            <div class="terminal-header">
+              <div class="terminal-buttons">
+                <div class="terminal-btn close"></div>
+                <div class="terminal-btn minimize"></div>
+                <div class="terminal-btn maximize"></div>
+              </div>
+              <div class="terminal-title">Recon Scanner</div>
+              <div class="terminal-led"></div>
+              <div class="terminal-actions">
+                <button class="copy-action-btn" data-copy-target="recon-output">Copy Report</button>
+              </div>
+            </div>
+            <div id="recon-output" class="terminal-body results-console"><span class="comment">// Report will output here...</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SSRF -->
+  <section class="section" id="ssrf">
+    <div class="section-num">02 / 06</div>
+    <div class="section-header-row">
+      <h2 class="section-title">Server-Side Request <span class="red">Forgery (SSRF)</span></h2>
+      <div class="section-tabs">
+        <button class="tab-btn active" data-target="ssrf-ref-panel">📚 Reference</button>
+        <button class="tab-btn tab-lab" data-target="ssrf-lab-panel">🔬 Interactive Lab</button>
+      </div>
+    </div>
+    <p class="section-intro">Occurs when an application fetches resources based on user-supplied input without sufficient validation, potentially exposing internal services unreachable from the internet.</p>
+
+    <!-- Reference Content -->
+    <div class="tab-content active" id="ssrf-ref-panel">
+      <div class="table-wrapper">
+        <table class="cmd-table">
+          <thead>
+            <tr><th>Attack Vector</th><th>Risk</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Internal Metadata Access</td>
+              <td><span class="tag critical">Critical</span></td>
+              <td class="desc">Fetching cloud metadata endpoints (169.254.169.254) to retrieve IAM credentials and instance data.</td>
+            </tr>
+            <tr>
+              <td>Port Scanning via SSRF</td>
+              <td><span class="tag warn">High</span></td>
+              <td class="desc">Using the server as a proxy to scan internal network ports and services not exposed externally.</td>
+            </tr>
+            <tr>
+              <td>Protocol Abuse</td>
+              <td><span class="tag warn">High</span></td>
+              <td class="desc">Leveraging file://, dict://, gopher:// schemes to exfiltrate data or interact with internal services.</td>
+            </tr>
+            <tr>
+              <td>Blind SSRF</td>
+              <td><span class="tag info">Medium</span></td>
+              <td class="desc">No response visible but out-of-band callbacks confirm SSRF via DNS or HTTP to a controlled server.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="defense-strip">
+        <div>
+          <div class="defense-label">Defensive Controls</div>
+          <div class="defense-items">
+            <span class="defense-chip">URL allowlisting</span>
+            <span class="defense-chip">Network segmentation</span>
+            <span class="defense-chip">Disable internal redirects</span>
+            <span class="defense-chip">Block private IP ranges</span>
+            <span class="defense-chip">IMDSv2 enforcement</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lab Content -->
+    <div class="tab-content" id="ssrf-lab-panel">
+      <div class="lab-container">
+        <div class="lab-panel">
+          <div class="lab-panel-header">Outbound URL Validator <span>Access Control checks</span></div>
+          <div class="lab-field">
+            <label for="ssrf-url-input">
+              Input Target Fetch URL:
+              <span class="label-hint">Enter scheme + host</span>
+            </label>
+            <input type="text" id="ssrf-url-input" class="cyber-input" placeholder="e.g. http://169.254.169.254/latest/meta-data/" value="http://169.254.169.254/latest/meta-data/">
+          </div>
+          <div class="template-row">
+            <span style="font-family: var(--mono); font-size: 10px; color: var(--muted); align-self: center; margin-right: 4px;">Presets:</span>
+            <button class="template-btn" data-type="ssrf" data-key="aws" data-input-target="ssrf-url-input">AWS Metadata</button>
+            <button class="template-btn" data-type="ssrf" data-key="gcp" data-input-target="ssrf-url-input">GCP Metadata</button>
+            <button class="template-btn" data-type="ssrf" data-key="local" data-input-target="ssrf-url-input">Local Gateway</button>
+            <button class="template-btn" data-type="ssrf" data-key="evasion" data-input-target="ssrf-url-input">Hex Bypass</button>
+            <button class="template-btn" data-type="ssrf" data-key="safe" data-input-target="ssrf-url-input">Safe GitHub API</button>
+          </div>
+
+          <!-- PORT GRID SCROLLER -->
+          <div class="port-grid-wrapper">
+            <div style="font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Target Port Scanner status:</div>
+            <div class="port-scan-grid" id="ssrf-port-grid">
+              <div class="port-node" data-port="21"><span>FTP:21</span></div>
+              <div class="port-node" data-port="22"><span>SSH:22</span></div>
+              <div class="port-node" data-port="23"><span>TEL:23</span></div>
+              <div class="port-node" data-port="25"><span>SMTP:25</span></div>
+              <div class="port-node" data-port="53"><span>DNS:53</span></div>
+              <div class="port-node" data-port="80"><span>HTTP:80</span></div>
+              <div class="port-node" data-port="443"><span>HTTPS:443</span></div>
+              <div class="port-node" data-port="3306"><span>SQL:3306</span></div>
+              <div class="port-node" data-port="5432"><span>PG:5432</span></div>
+              <div class="port-node" data-port="6379"><span>RED:6379</span></div>
+              <div class="port-node" data-port="8080"><span>ADM:8080</span></div>
+              <div class="port-node" data-port="27017"><span>MON:27017</span></div>
+            </div>
+          </div>
+
+          <button id="ssrf-validate-btn" class="cyber-btn danger">Validate Target URL</button>
+        </div>
+        <div class="lab-panel">
+          <div class="lab-panel-header">Filter Evaluation Console <span>Validation State</span></div>
+          <div class="terminal-window">
+            <div class="terminal-header">
+              <div class="terminal-buttons">
+                <div class="terminal-btn close"></div>
+                <div class="terminal-btn minimize"></div>
+                <div class="terminal-btn maximize"></div>
+              </div>
+              <div class="terminal-title">SSRF Firewall Logs</div>
+              <div class="terminal-led"></div>
+              <div class="terminal-actions">
+                <button class="copy-action-btn" data-copy-target="ssrf-output">Copy Log</button>
+              </div>
+            </div>
+            <div id="ssrf-output" class="terminal-body results-console"><span class="comment">// Firewall analysis will output here...</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTH -->
+  <section class="section" id="auth">
+    <div class="section-num">03 / 06</div>
+    <div class="section-header-row">
+      <h2 class="section-title">Authentication &amp; <span class="accent2">Authorization</span></h2>
+      <div class="section-tabs">
+        <button class="tab-btn active" data-target="auth-ref-panel">📚 Reference</button>
+        <button class="tab-btn tab-lab" data-target="auth-lab-panel">🔬 Interactive Lab</button>
+      </div>
+    </div>
+    <p class="section-intro">Authentication verifies identity; authorization controls access. Weak implementations lead to account takeovers, privilege escalation, and sensitive data exposure.</p>
+
+    <!-- Reference Content -->
+    <div class="tab-content active" id="auth-ref-panel">
+      <div class="card-grid">
+        <div class="card red">
+          <div class="card-icon">🔑</div>
+          <div class="card-title">Broken Authentication</div>
+          <div class="card-body">Weak passwords, missing MFA, session fixation, insecure token storage, and predictable session IDs allowing account takeover.</div>
+        </div>
+        <div class="card yellow">
+          <div class="card-icon">🚪</div>
+          <div class="card-title">Broken Access Control</div>
+          <div class="card-body">IDOR, path traversal, missing function-level access checks, and CORS misconfigurations enabling unauthorized resource access.</div>
+        </div>
+        <div class="card purple">
+          <div class="card-icon">⬆️</div>
+          <div class="card-title">Privilege Escalation</div>
+          <div class="card-body">Horizontal escalation (accessing other users' data) or vertical escalation (gaining admin access from a standard account).</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🎫</div>
+          <div class="card-title">JWT Vulnerabilities</div>
+          <div class="card-body">Algorithm confusion (RS256→HS256), weak secrets, missing signature validation, and the "none" algorithm attack.</div>
+        </div>
+      </div>
+
+      <div class="defense-strip">
+        <div>
+          <div class="defense-label">Defensive Controls</div>
+          <div class="defense-items">
+            <span class="defense-chip">Strong session management</span>
+            <span class="defense-chip">MFA enforcement</span>
+            <span class="defense-chip">RBAC / ABAC</span>
+            <span class="defense-chip">Secure JWT libraries</span>
+            <span class="defense-chip">Rate limiting</span>
+            <span class="defense-chip">Account lockout</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lab Content -->
+    <div class="tab-content" id="auth-lab-panel">
+      <div class="lab-container">
+        <!-- Password Tester -->
+        <div class="lab-panel">
+          <div class="lab-panel-header">Password strength check <span>Security Policy Policy</span></div>
+          <div class="lab-field">
+            <label for="auth-pw-input">
+              Test Password Input:
+              <span class="label-hint">Evaluates policy rules</span>
+            </label>
+            <input type="password" id="auth-pw-input" class="cyber-input" placeholder="Type a password (e.g. password, Admin1!)">
+          </div>
+          
+          <div class="pw-strength-container">
+            <div class="pw-status-row">
+              <span>Password Index Score:</span>
+              <span id="auth-pw-label">Awaiting input</span>
+            </div>
+            <div class="pw-meter-segmented">
+              <div class="pw-segment"></div>
+              <div class="pw-segment"></div>
+              <div class="pw-segment"></div>
+              <div class="pw-segment"></div>
+              <div class="pw-segment"></div>
+            </div>
+          </div>
+
+          <div class="pw-checklist">
+            <div id="pw-rule-min8" class="pw-item">Min 8 characters</div>
+            <div id="pw-rule-min12" class="pw-item">Min 12 characters</div>
+            <div id="pw-rule-upper" class="pw-item">Upper case letters</div>
+            <div id="pw-rule-lower" class="pw-item">Lower case letters</div>
+            <div id="pw-rule-digit" class="pw-item">Numbers included</div>
+            <div id="pw-rule-special" class="pw-item">Special symbols</div>
+            <div id="pw-rule-nocommon" class="pw-item">Not dictionary common</div>
+          </div>
+        </div>
+
+        <!-- JWT Decoder & Generator -->
+        <div class="lab-panel">
+          <div class="lab-panel-header">JWT Developer &amp; Decoder <span>Build and inspect tokens</span></div>
+          
+          <!-- JWT BUILDER FORM -->
+          <div class="jwt-generator-ui">
+            <div style="font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 6px;">JWT Claims Generator:</div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="lab-field">
+                <label for="jwt-sub-input" style="font-size: 11px;">Subject (sub):</label>
+                <input type="text" id="jwt-sub-input" class="cyber-input" style="padding: 6px 10px; font-size: 12px;" value="john_doe">
+              </div>
+              <div class="lab-field">
+                <label for="jwt-role-input" style="font-size: 11px;">Role claim:</label>
+                <input type="text" id="jwt-role-input" class="cyber-input" style="padding: 6px 10px; font-size: 12px;" value="user">
+              </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="lab-field">
+                <label for="jwt-exp-input" style="font-size: 11px;">Expires In (sec):</label>
+                <input type="number" id="jwt-exp-input" class="cyber-input" style="padding: 6px 10px; font-size: 12px;" value="3600">
+              </div>
+              <div class="lab-field">
+                <label for="jwt-alg-select" style="font-size: 11px;">Algorithm (alg):</label>
+                <select id="jwt-alg-select" class="cyber-select" style="padding: 6px 10px; font-size: 12px; background-color: #04070e; border: 1px solid var(--border); color: #fff;">
+                  <option value="RS256">RS256 (RSA Secure)</option>
+                  <option value="none">none (Unsigned Exploit)</option>
+                  <option value="HS256">HS256 (HMAC Symmetric)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="lab-field">
+            <label for="auth-jwt-input">
+              JSON Web Token Value:
+              <span class="label-hint">Pasted or compiled from generator</span>
+            </label>
+            <textarea id="auth-jwt-input" class="cyber-textarea" style="min-height: 80px;" placeholder="header.payload.signature"></textarea>
+          </div>
+          <div class="template-row">
+            <span style="font-family: var(--mono); font-size: 10px; color: var(--muted); align-self: center; margin-right: 4px;">Presets:</span>
+            <button class="template-btn" data-type="jwt" data-key="valid" data-input-target="auth-jwt-input">Valid RS256</button>
+            <button class="template-btn" data-type="jwt" data-key="none" data-input-target="auth-jwt-input">alg:none Exploit</button>
+            <button class="template-btn" data-type="jwt" data-key="expired" data-input-target="auth-jwt-input">Expired token</button>
+            <button class="template-btn" data-type="jwt" data-key="confusion" data-input-target="auth-jwt-input">Key Confusion</button>
+          </div>
+          <button id="auth-jwt-btn" class="cyber-btn">Decode and Inspect</button>
+          
+          <div class="terminal-window" style="margin-top: 8px;">
+            <div class="terminal-header">
+              <div class="terminal-buttons">
+                <div class="terminal-btn close"></div>
+                <div class="terminal-btn minimize"></div>
+                <div class="terminal-btn maximize"></div>
+              </div>
+              <div class="terminal-title">JWT Decoder</div>
+              <div class="terminal-led"></div>
+              <div class="terminal-actions">
+                <button class="copy-action-btn" data-copy-target="auth-jwt-output">Copy Claims</button>
+              </div>
+            </div>
+            <div id="auth-jwt-output" class="terminal-body results-console" style="min-height: 180px;"><span class="comment">// Decoded claims will output here...</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INJECTION -->
+  <section class="section" id="injection">
+    <div class="section-num">04 / 06</div>
+    <div class="section-header-row">
+      <h2 class="section-title">Injection <span class="red">Vulnerabilities</span></h2>
+      <div class="section-tabs">
+        <button class="tab-btn active" data-target="injection-ref-panel">📚 Reference</button>
+        <button class="tab-btn tab-lab" data-target="injection-lab-panel">🔬 Interactive Lab</button>
+      </div>
+    </div>
+    <p class="section-intro">Arise when applications pass untrusted data to interpreters without proper sanitization. One of the most critical and widespread vulnerability classes.</p>
+
+    <!-- Reference Content -->
+    <div class="tab-content active" id="injection-ref-panel">
+      <div class="table-wrapper">
+        <table class="cmd-table">
+          <thead>
+            <tr><th>Type</th><th>Severity</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SQL Injection</td>
+              <td><span class="tag critical">Critical</span></td>
+              <td class="desc">Manipulating database queries to bypass auth, extract data, or execute OS commands (via xp_cmdshell, INTO OUTFILE, etc.).</td>
+            </tr>
+            <tr>
+              <td>Command Injection</td>
+              <td><span class="tag critical">Critical</span></td>
+              <td class="desc">Injecting OS commands via shell metacharacters (;, |, &&, $()) when user input is passed to system functions.</td>
+            </tr>
+            <tr>
+              <td>SSTI</td>
+              <td><span class="tag critical">Critical</span></td>
+              <td class="desc">Server-Side Template Injection — exploiting template engines (Jinja2, Twig) to achieve RCE via crafted payloads like {{7*7}}.</td>
+            </tr>
+            <tr>
+              <td>XXE</td>
+              <td><span class="tag warn">High</span></td>
+              <td class="desc">XML External Entity injection to read local files, perform SSRF, or DoS via entity expansion attacks (Billion Laughs).</td>
+            </tr>
+            <tr>
+              <td>LDAP / XPath Injection</td>
+              <td><span class="tag warn">High</span></td>
+              <td class="desc">Manipulating directory or XML queries to bypass authentication or extract sensitive directory information.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="defense-strip">
+        <div>
+          <div class="defense-label">Defensive Controls</div>
+          <div class="defense-items">
+            <span class="defense-chip">Parameterized queries</span>
+            <span class="defense-chip">Input validation &amp; encoding</span>
+            <span class="defense-chip">Least-privilege DB accounts</span>
+            <span class="defense-chip">Disable external XML entities</span>
+            <span class="defense-chip">Secure coding training</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lab Content -->
+    <div class="tab-content" id="injection-lab-panel">
+      <div class="lab-container" style="grid-template-columns: 1fr;">
+        <div class="lab-panel">
+          <div class="lab-panel-header">Query Injection Scanner <span>Scan SQLi, XSS, and SSTI payloads</span></div>
+          <div class="lab-field">
+            <label for="injection-input">
+              Enter Test Query Payload:
+              <span class="label-hint">Input values to test sanitizers</span>
+            </label>
+            <input type="text" id="injection-input" class="cyber-input" placeholder="e.g. admin' OR '1'='1" value="admin' OR '1'='1">
+          </div>
+          <div class="template-row">
+            <span style="font-family: var(--mono); font-size: 10px; color: var(--muted); align-self: center; margin-right: 4px;">Presets:</span>
+            <button class="template-btn" data-type="injection" data-key="sqli" data-input-target="injection-input">Auth Bypass SQLi</button>
+            <button class="template-btn" data-type="injection" data-key="stacked" data-input-target="injection-input">Stacked Query</button>
+            <button class="template-btn" data-type="injection" data-key="xss" data-input-target="injection-input">XSS Script</button>
+            <button class="template-btn" data-type="injection" data-key="ssti" data-input-target="injection-input">SSTI Jinja</button>
+            <button class="template-btn" data-type="injection" data-key="xxe" data-input-target="injection-input">XXE File read</button>
+          </div>
+          <button id="injection-analyze-btn" class="cyber-btn danger">Analyze Input</button>
+        </div>
+        
+        <div class="lab-container" style="padding: 0; border: none; margin-top: 12px; gap: 20px;">
+          <div class="lab-panel">
+            <div class="lab-panel-header">Scan Threat Report <span>Matched rule flags</span></div>
+            <div class="terminal-window">
+              <div class="terminal-header">
+                <div class="terminal-buttons">
+                  <div class="terminal-btn close"></div>
+                  <div class="terminal-btn minimize"></div>
+                  <div class="terminal-btn maximize"></div>
+                </div>
+                <div class="terminal-title">Regex Scanner</div>
+                <div class="terminal-led"></div>
+                <div class="terminal-actions">
+                  <button class="copy-action-btn" data-copy-target="injection-output">Copy Report</button>
+                </div>
+              </div>
+              <div id="injection-output" class="terminal-body results-console" style="min-height: 180px;"><span class="comment">// Threat scan outputs will show here...</span></div>
+            </div>
+          </div>
+          <div class="lab-panel">
+            <div class="lab-panel-header">Mock DB Execution Simulation <span>Concatenation vs prepared queries</span></div>
+            <div class="terminal-window">
+              <div class="terminal-header">
+                <div class="terminal-buttons">
+                  <div class="terminal-btn close"></div>
+                  <div class="terminal-btn minimize"></div>
+                  <div class="terminal-btn maximize"></div>
+                </div>
+                <div class="terminal-title">Query Engine Trace</div>
+                <div class="terminal-led"></div>
+                <div class="terminal-actions">
+                  <button class="copy-action-btn" data-copy-target="injection-db-output">Copy Trace</button>
+                </div>
+              </div>
+              <div id="injection-db-output" class="terminal-body results-console" style="min-height: 180px;"><span class="comment">// Database query outputs will render here...</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HTTP SMUGGLING -->
+  <section class="section" id="smuggling">
+    <div class="section-num">05 / 06</div>
+    <div class="section-header-row">
+      <h2 class="section-title">HTTP Request <span class="yellow">Smuggling</span></h2>
+      <div class="section-tabs">
+        <button class="tab-btn active" data-target="smuggling-ref-panel">📚 Reference</button>
+        <button class="tab-btn tab-lab" data-target="smuggling-lab-panel">🔬 Interactive Lab</button>
+      </div>
+    </div>
+    <p class="section-intro">Exploits inconsistencies in how front-end and back-end servers parse HTTP request boundaries, leading to request queue poisoning and security bypass.</p>
+
+    <!-- Reference Content -->
+    <div class="tab-content active" id="smuggling-ref-panel">
+      <div class="card-grid">
+        <div class="card yellow">
+          <div class="card-icon">🔀</div>
+          <div class="card-title">CL.TE Smuggling</div>
+          <div class="card-body">Front-end uses Content-Length; back-end uses Transfer-Encoding. Attacker's smuggled prefix is prepended to the next user's request.</div>
+        </div>
+        <div class="card red">
+          <div class="card-icon">⚡</div>
+          <div class="card-title">TE.CL Smuggling</div>
+          <div class="card-body">Front-end uses Transfer-Encoding; back-end uses Content-Length. Reversed trust boundary allows similar poisoning effects.</div>
+        </div>
+        <div class="card purple">
+          <div class="card-icon">🎯</div>
+          <div class="card-title">Impact Scenarios</div>
+          <div class="card-body">Bypass access controls, poison web caches, capture credentials in next victim's request, XSS via reflected content, and account hijacking.</div>
+        </div>
+      </div>
+
+      <div class="defense-strip">
+        <div>
+          <div class="defense-label">Defensive Controls</div>
+          <div class="defense-items">
+            <span class="defense-chip">End-to-end HTTP/2</span>
+            <span class="defense-chip">Reject ambiguous requests</span>
+            <span class="defense-chip">Normalize traffic at edge</span>
+            <span class="defense-chip">Consistent server parsing</span>
+            <span class="defense-chip">Disable keepalive to backend</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lab Content -->
+    <div class="tab-content" id="smuggling-lab-panel">
+      <div class="lab-container">
+        <div class="lab-panel">
+          <div class="lab-panel-header">Request Framing Inspector <span>Detect body delimiters</span></div>
+          <div class="lab-field">
+            <label for="smuggling-headers-input">
+              Paste Request Headers:
+              <span class="label-hint">Requires framing parameters</span>
+            </label>
+            <textarea id="smuggling-headers-input" class="cyber-textarea" placeholder="POST /index.html HTTP/1.1&#10;Host: vulnerable-website.com&#10;Content-Length: 6&#10;Transfer-Encoding: chunked"></textarea>
+          </div>
+          <div class="template-row">
+            <span style="font-family: var(--mono); font-size: 10px; color: var(--muted); align-self: center; margin-right: 4px;">Presets:</span>
+            <button class="template-btn" data-type="smuggling" data-key="valid" data-input-target="smuggling-headers-input">Valid Content-Length</button>
+            <button class="template-btn" data-type="smuggling" data-key="clte" data-input-target="smuggling-headers-input">CL.TE payload</button>
+            <button class="template-btn" data-type="smuggling" data-key="tecl" data-input-target="smuggling-headers-input">TE.CL payload</button>
+          </div>
+          <button id="smuggling-analyze-btn" class="cyber-btn">Scan for Framing Mismatch</button>
+        </div>
+        <div class="lab-panel">
+          <div class="lab-panel-header">Boundary Conflict Output <span>Framing conflict report</span></div>
+          <div class="terminal-window">
+            <div class="terminal-header">
+              <div class="terminal-buttons">
+                <div class="terminal-btn close"></div>
+                <div class="terminal-btn minimize"></div>
+                <div class="terminal-btn maximize"></div>
+              </div>
+              <div class="terminal-title">Smuggling Scanner</div>
+              <div class="terminal-led"></div>
+              <div class="terminal-actions">
+                <button class="copy-action-btn" data-copy-target="smuggling-output">Copy Output</button>
+              </div>
+            </div>
+            <div id="smuggling-output" class="terminal-body results-console"><span class="comment">// Framing evaluation will show here...</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WAF -->
+  <section class="section" id="waf">
+    <div class="section-num">06 / 06</div>
+    <div class="section-header-row">
+      <h2 class="section-title">Web Application <span class="green">Firewalls</span></h2>
+      <div class="section-tabs">
+        <button class="tab-btn active" data-target="waf-ref-panel">📚 Reference</button>
+        <button class="tab-btn tab-lab" data-target="waf-lab-panel">🔬 Interactive Lab</button>
+      </div>
+    </div>
+    <p class="section-intro">WAFs filter and monitor HTTP traffic between clients and web applications, detecting and blocking common attack patterns before they reach backend systems.</p>
+
+    <!-- Reference Content -->
+    <div class="tab-content active" id="waf-ref-panel">
+      <div class="table-wrapper">
+        <table class="cmd-table">
+          <thead>
+            <tr><th>WAF Bypass Technique</th><th>Risk</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Encoding Tricks</td>
+              <td><span class="tag warn">High</span></td>
+              <td class="desc">Double URL encoding, Unicode normalization, HTML entity encoding to evade signature-based detection.</td>
+            </tr>
+            <tr>
+              <td>Case Variation</td>
+              <td><span class="tag info">Medium</span></td>
+              <td class="desc">Mixed case keywords (SeLeCt, uNiOn) to bypass case-sensitive pattern matching rules.</td>
+            </tr>
+            <tr>
+              <td>Comment Insertion</td>
+              <td><span class="tag warn">High</span></td>
+              <td class="desc">SQL comments (/**/) between keywords to break up recognized patterns while preserving query logic.</td>
+            </tr>
+            <tr>
+              <td>Header Manipulation</td>
+              <td><span class="tag warn">High</span></td>
+              <td class="desc">Forged X-Forwarded-For, X-Real-IP headers to spoof trusted IPs and bypass IP-based restrictions.</td>
+            </tr>
+            <tr>
+              <td>Chunked Transfer</td>
+              <td><span class="tag info">Medium</span></td>
+              <td class="desc">Splitting payloads across chunked encoding segments to evade body inspection rules.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="defense-strip">
+        <div>
+          <div class="defense-label">WAF Best Practices</div>
+          <div class="defense-items">
+            <span class="defense-chip">Positive security model</span>
+            <span class="defense-chip">Regular rule updates</span>
+            <span class="defense-chip">Log &amp; alert tuning</span>
+            <span class="defense-chip">Defense-in-depth</span>
+            <span class="defense-chip">OWASP Core Rule Set</span>
+            <span class="defense-chip">Rate limiting</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lab Content -->
+    <div class="tab-content" id="waf-lab-panel">
+      <div class="lab-container">
+        <div class="lab-panel">
+          <div class="lab-panel-header">WAF Bypass Mutation Generator <span>Evade signature scanners</span></div>
+          <div class="lab-field">
+            <label for="waf-payload-input">
+              Enter Raw Attack Payload:
+              <span class="label-hint">Input raw command strings</span>
+            </label>
+            <input type="text" id="waf-payload-input" class="cyber-input" placeholder="e.g. ' UNION SELECT username, password FROM users--" value="' UNION SELECT username, password FROM users--">
+          </div>
+          <button id="waf-generate-btn" class="cyber-btn">Generate Evasion Mutations</button>
+        </div>
+        <div class="lab-panel">
+          <div class="lab-panel-header">Mutated Payloads Output <span>Bypass payload strings</span></div>
+          <div class="terminal-window">
+            <div class="terminal-header">
+              <div class="terminal-buttons">
+                <div class="terminal-btn close"></div>
+                <div class="terminal-btn minimize"></div>
+                <div class="terminal-btn maximize"></div>
+              </div>
+              <div class="terminal-title">WAF Mutations Console</div>
+              <div class="terminal-led"></div>
+              <div class="terminal-actions">
+                <button class="copy-action-btn" data-copy-target="waf-output">Copy All</button>
+              </div>
+            </div>
+            <div id="waf-output" class="terminal-body results-console"><span class="comment">// Evasion payload strings will show here...</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK REFERENCE — full width -->
+  <section class="section">
+    <div class="container">
+      <div class="section-num">REF / GUIDE</div>
+      <h2 class="section-title">Quick Reference &amp; <span class="accent">General Principles</span></h2>
+      <p class="section-intro">Layered software security requires solid architecture rules. These core tenets define resilient software protection strategies.</p>
+      
+      <div class="table-wrapper">
+        <table class="cmd-table">
+          <thead>
+            <tr><th>Principle</th><th>Details</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Defense-in-Depth</td><td class="desc">No single control is sufficient. Layer WAF, input validation, parameterized queries, least privilege, and monitoring. A bypass of one layer should not mean full compromise.</td></tr>
+            <tr><td>Least Privilege</td><td class="desc">Database accounts, API keys, and IAM roles should have only the permissions they need. Reduces blast radius of injection and SSRF vulnerabilities.</td></tr>
+            <tr><td>Secure-by-Default</td><td class="desc">Frameworks and libraries should ship with safe defaults. Developers should opt-in to dangerous features (e.g., raw queries, external entity parsing), not opt-out.</td></tr>
+            <tr><td>Zero Trust Architecture</td><td class="desc">Never trust the network location. Authenticate and authorize every request, even internal service-to-service calls. Limits SSRF and lateral movement impact.</td></tr>
+            <tr><td>Logging &amp; Monitoring</td><td class="desc">Log authentication events, access control failures, and validation errors. Set up alerts for anomalous patterns. Detection is as important as prevention.</td></tr>
+            <tr><td>Patch &amp; Update</td><td class="desc">Most critical vulnerabilities exploit known, patched weaknesses. Maintain an SLA for applying security patches to frameworks, libraries, and server software.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /container -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <p>Cybersecurity Testing Concepts &nbsp;|&nbsp; <span>Study Reference</span> &nbsp;|&nbsp; For educational use only &nbsp;|&nbsp; Built by <a href="https://siddhanth.ryzn.pro/" style="color:inherit">Siddhanth Mani</a> &middot; <a href="https://github.com/Siddhanth-Mani/cybersecurity-sandbox" style="color:inherit">Source</a></p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+.agent/
+.agent-mem/
+.agents/
+.brainsync/
+.cursor/
+.vscode/
+.mcp.json
+.windsurfrules
+AGENT.md
+CLAUDE.md
+__pycache__/
